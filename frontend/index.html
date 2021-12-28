@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Users</title>
+</head>
+
+<body>
+    <button onclick="logout()">Logout</button>
+    <div>
+        <table id="usersTable">
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Can Write</th>
+                <th>Password</th>
+            </tr>
+            <tr>
+                <td colspan="5">
+                    <hr>
+                </td>
+            </tr>
+            <tr id="createUserForm">
+                <th></th>
+                <th><input type="text" name="username" placeholder="username"></th>
+                <th><input type="checkbox" name="is_rw"></th>
+                <th><input type="password" name="password" placeholder="password"></th>
+                <th><button name="create" onclick="createUserHandler()">Create</button></th>
+            </tr>
+            <tr>
+                <td colspan="5">
+                    <hr>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+
+</html>
+<script type="text/javascript" src="api.js"></script>
+<script lang="js">
+    window.onload = render()
+
+    function createUserRow(user) {
+        const els = ["id", "username", "is_rw", "password"];
+        let row = document.createElement("tr")
+        for (const attrName of els) {
+            let col = document.createElement("td");
+            let cell = null;
+            if (attrName == "id") {
+                cell = document.createTextNode(user[attrName]);
+            } else if (attrName == "is_rw") {
+                cell = document.createElement("input");
+                cell.type = "checkbox";
+                cell.checked = user[attrName];
+            } else if (attrName == "password") {
+                cell = document.createElement("input");
+                cell.type = "password";
+                cell.placeholder = "password";
+            } else {
+                cell = document.createElement("input");
+                cell.value = user[attrName];
+            }
+            cell.name = attrName;
+            col.appendChild(cell);
+            row.appendChild(col);
+        }
+
+        let saveButton = document.createElement("button");
+        saveButton.innerText = "Save";
+        saveButton.onclick = function () { save(user.id, row) };
+        row.appendChild(saveButton);
+
+        let deleteButton = document.createElement("button");
+        deleteButton.innerText = "Delete";
+        deleteButton.onclick = function () {
+            deleteUser(user.id);
+            usersTable.removeChild(row);
+        };
+        row.appendChild(deleteButton);
+
+        return row
+    }
+
+    function render() {
+        let users = fetchUsers();
+
+        let usersTable = document.getElementById("usersTable");
+
+        for (const user of users) {
+            usersTable.appendChild(createUserRow(user));
+        }
+
+        document.body.appendChild(usersTable);
+    }
+
+    function save(userId, element) {
+        let newData = {};
+        for (const input of element.getElementsByTagName("input")) {
+            if (input.name == "is_rw") {
+                newData[input.name] = input.checked;
+            } else if (input.name == "password") {
+                if (!input.value) {
+                    input.value = null;
+                }
+            } else {
+                newData[input.name] = input.value;
+            }
+        }
+        updateUser(userId, newData);
+    }
+
+    function createUserHandler() {
+        let createForm = document.getElementById("createUserForm");
+        let newUser = {};
+        for (const input of createForm.getElementsByTagName("input")) {
+            console.log(input.type, input.name)
+
+            if (input.name == "is_rw") {
+                newUser[input.name] = input.checked;
+            } else {
+                newUser[input.name] = input.value;
+            }
+        }
+        let userWithId = createUser(newUser);
+        usersTable.appendChild(createUserRow(userWithId));
+    }
+
+</script>
